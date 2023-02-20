@@ -1,4 +1,4 @@
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __author__ = "Demod"
 
 import zlib
@@ -60,47 +60,47 @@ class ZPackFile:
         e = self.entries[key]
         return e.d[0]
 
-    def bitmap(self, key):
+    def bitmap(self, key, w=None, h=None):
         e = self.entries[key]
         m = e.m
         d = e.d
         if m == M_RAW or m == M_IMG or m == M_IMGM or not gs:
-            return d[0]
+            return _frames(d[0], w, h)
         if m == M_IMGGS or m == M_IMGGSM:
-            return (d[0], d[1])
+            return _frames((d[0], d[1]), w, h)
 
-    def mask(self, key):
+    def mask(self, key, w=None, h=None):
         e = self.entries[key]
         m = e.m
         d = e.d
         if m == M_IMGM:
-            return d[1]
+            return _frames(d[1], w, h)
         if m == M_IMGGSM:
-            return d[2]
+            return _frames(d[2], w, h)
 
-    def bitmapAndMask(self, key):
-        return (self.bitmap(key), self.mask(key))
+    def bitmapAndMask(self, key, w=None, h=None):
+        return (self.bitmap(key, w, h), self.mask(key, w, h))
 
     def sprite(self, key, w=None, h=None):
-        entry = self.entries[key]
+        e = self.entries[key]
         if w is None:
-            w = entry.w
+            w = e.w
         if h is None:
-            h = entry.h
+            h = e.h
         return Sprite(w, h, self.bitmap(key))
 
     def spriteMask(self, key, w=None, h=None):
-        entry = self.entries[key]
+        e = self.entries[key]
         if w is None:
-            w = entry.w
+            w = e.w
         if h is None:
-            h = entry.h
+            h = e.h
         mask = self.mask(key)
         if mask is not None:
             return Sprite(w, h, mask)
 
     def spriteAndMask(self, key, w=None, h=None):
-        return (self.sprite(key), self.spriteMask(key))
+        return (self.sprite(key, w, h), self.spriteMask(key, w, h))
 
     def python(self, key):
         # TODO
@@ -132,3 +132,20 @@ def _rStr(mv, o):
 
 def _rBA(mv, o, l):
     return mv[o:o+l], o+l
+
+
+def _frames(bmp, w, h):
+    if w is None or h is None:
+        return bmp
+    bgs = isinstance(bmp, (tuple, list))
+    bal = len(bmp[0]) if bgs else len(bmp)
+    bh = (h + 7) // 8
+    fl = w * bh
+    fc = bal // fl
+    if bgs:
+        mv1 = memoryview(bmp[0])
+        mv2 = memoryview(bmp[1])
+        return [(mv1[i*fl:(i+1)*fl], mv2[i*fl:(i+1)*fl]) for i in range(fc)]
+    else:
+        mv = memoryview(bmp)
+        return [mv[i*fl:(i+1)*fl] for i in range(fc)]
