@@ -1,3 +1,9 @@
+
+/**
+ * @version 0.0.3
+ * @author Demod
+ */
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
