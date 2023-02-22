@@ -1,8 +1,8 @@
-from ZPack import ZPackFile
-from thumbyButton import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import math
-from sys import path as syspath
-syspath.insert(0, '/Games/ZPackTest')
+from thumbyButton import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
+from ZPack import ZPackFile
+from sys import path as syspath  # NOQA
+syspath.insert(0, '/Games/ZPackTest')  # NOQA
 
 
 GRAYSCALE = True
@@ -15,21 +15,13 @@ display.setFPS(30)
 
 zpArt = ZPackFile("/Games/ZPackTest/Art.zpack")
 
-bgBmp = [
-    zpArt.bitmap("bg0"),
-    zpArt.bitmap("bg2"),
-    zpArt.bitmap("bg1"),
-    zpArt.bitmap("bg3"),
-    zpArt.bitmap("bg4"),
-    zpArt.bitmap("bg5")
-]
-bgMask = [
-    None,
-    zpArt.mask("bg2"),
-    zpArt.mask("bg1"),
-    zpArt.mask("bg3"),
-    zpArt.mask("bg4"),
-    zpArt.mask("bg5")
+bg = [
+    zpArt.bitmapAndMask("bg0"),
+    zpArt.bitmapAndMask("bg2"),
+    zpArt.bitmapAndMask("bg1"),
+    zpArt.bitmapAndMask("bg3"),
+    zpArt.bitmapAndMask("bg4"),
+    zpArt.bitmapAndMask("bg5")
 ]
 bgParallax = [
     [0.0, 0.25],
@@ -48,8 +40,7 @@ bgRect = [
     [0, 32, 128, 8]
 ]
 
-player = zpArt.sprite("char", 24, 32)
-playerMask = zpArt.spriteMask("char", 24, 32)
+player, playerMask = zpArt.spriteAndMask("char")
 
 player.x = 4
 player.y = 5
@@ -132,8 +123,8 @@ while True:
         x = rect[0] - (int(posX * parallax[0]) % w)
         y = rect[1] + int(posY * parallax[1])
         #print(i," -> ",x,",",y)
-        bmp = bgBmp[i]
-        mask = bgMask[i]
+        bmp = bg[i][0]
+        mask = bg[i][1]
         if mask is None:
             display.blit(bmp, x, y, w, h, -1, 0, 0)
             if x + w < 72:
