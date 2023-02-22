@@ -122,7 +122,6 @@ while True:
         h = rect[3]
         x = rect[0] - (int(posX * parallax[0]) % w)
         y = rect[1] + int(posY * parallax[1])
-        #print(i," -> ",x,",",y)
         bmp = bg[i][0]
         mask = bg[i][1]
         if mask is None:

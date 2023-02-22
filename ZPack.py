@@ -27,8 +27,8 @@ class ZPackFile:
         zfs = open(file, 'rb')
         zds = zlib.DecompIO(zfs)
         mfs, _ = _rU32(zds.read(4), 0)
-        self.mfd = zds.read(mfs)
-        mfv = memoryview(self.mfd)
+        mfd = zds.read(mfs)
+        mfv = memoryview(mfd)
         self.entries = {}
 
         mfc, o = _rU8(mfv, 0)
@@ -58,6 +58,9 @@ class ZPackFile:
                 e.n, o = _rStr(mfv, o)
             self.entries[k] = e
 
+        zfs = None
+        zds = None
+        mfd = None
         gc.collect()
 
     def metadata(self, key):
@@ -75,7 +78,7 @@ class ZPackFile:
             else:
                 return _frames(e.d[0], e.w, e.h) if e.f else e.d[0]
 
-    def mask(self, key, w=None, h=None):
+    def mask(self, key):
         e = self.entries[key]
         if e.id == M_IMG and e.m:
             if e.gs:
@@ -135,8 +138,6 @@ def _rStr(mv, o):
 
 
 def _frames(bmp, w, h):
-    if w is None or h is None:
-        return bmp
     bgs = isinstance(bmp, (tuple, list))
     bal = len(bmp[0]) if bgs else len(bmp)
     bh = (h + 7) // 8
