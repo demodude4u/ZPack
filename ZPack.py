@@ -1,4 +1,4 @@
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __author__ = "Demod"
 
 import zlib
@@ -30,6 +30,7 @@ class ZPackFile:
         mfd = zds.read(mfs)
         mfv = memoryview(mfd)
         self.entries = {}
+        self.sprites = []
 
         mfc, o = _rU8(mfv, 0)
         for i in range(mfc):
@@ -58,9 +59,6 @@ class ZPackFile:
                 e.n, o = _rStr(mfv, o)
             self.entries[k] = e
 
-        zfs = None
-        zds = None
-        mfd = None
         gc.collect()
 
     def metadata(self, key):
@@ -93,18 +91,26 @@ class ZPackFile:
         e = self.entries[key]
         if e.id == M_IMG:
             if gs and e.gs:
-                return Sprite(e.w, e.h, (e.d[0], e.d[1]))
+                s = Sprite(e.w, e.h, (e.d[0], e.d[1]))
+                self.sprites.append(s)
+                return s
             else:
-                return Sprite(e.w, e.h, e.d[0])
+                s = Sprite(e.w, e.h, e.d[0])
+                self.sprites.append(s)
+                return s
             return
 
     def spriteMask(self, key):
         e = self.entries[key]
         if e.id == M_IMG and e.m:
             if e.gs:
-                return Sprite(e.w, e.h, e.d[2])
+                s = Sprite(e.w, e.h, e.d[2])
+                self.sprites.append(s)
+                return s
             else:
-                return Sprite(e.w, e.h, e.d[1])
+                s = Sprite(e.w, e.h, e.d[1])
+                self.sprites.append(s)
+                return s
 
     def spriteAndMask(self, key):
         return (self.sprite(key), self.spriteMask(key))
@@ -112,6 +118,15 @@ class ZPackFile:
     def python(self, key):
         # TODO
         pass
+
+    def dispose(self):
+        for k in self.entries:
+            self.entries[k].d = None
+        self.entries = None
+        for s in self.sprites:
+            s.bitmapSource = None
+            s.bitmap = None
+        self.sprites = None
 
 
 class ZPackEntry:

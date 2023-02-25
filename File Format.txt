@@ -1,0 +1,36 @@
+// Entire file is compressed using zlib, this is the uncompressed format
+
+struct File {
+    uint32      manifestSize    // In bytes
+    Manifest    manifest
+    uint8[][]   data            // In order listed in manifest
+}
+
+struct Manifest {
+    uint8       entryCount
+    Entry[]     entries
+}
+
+struct Entry {
+    String      key
+    uint8       metaID          // 0 = Raw, 1 = Python, 2 = Image
+    uint8       dataCount
+    uint32[]    dataLengths     // In bytes, in order, no padding
+    Metadata    metadata        // Depends on metaID, skipped for Raw
+}
+
+struct Metadata (Python) {
+    String      moduleName
+}
+
+struct Metadata (Image) {
+    uint8       flags
+    uint16      width
+    uint16      height
+    uint8       frameCount      // Skipped if no frames flag
+}
+
+struct String {
+    uint16      length          // In bytes
+    uint8[]     data            // UTF-8 encoding, no null terminator
+}
