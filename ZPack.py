@@ -1,4 +1,4 @@
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __author__ = "Demod"
 
 import zlib
@@ -21,7 +21,7 @@ IMG_FRAMES = 0x04
 
 
 class ZPackFile:
-    def __init__(self, file):
+    def __init__(self, file, include=[], exclude=[]):
         gc.collect()
 
         zfs = open(file, 'rb')
@@ -32,19 +32,34 @@ class ZPackFile:
         self.entries = {}
         self.sprites = []
 
+        wl = len(include) > 0
+        bl = len(exclude) > 0
+
         mfc, o = _rU8(mfv, 0)
+        dbaz = bytearray(1024)
+        dmvz = memoryview(dbaz)
         for i in range(mfc):
             k, o = _rStr(mfv, o)
             id, o = _rU8(mfv, o)
             dc, o = _rU8(mfv, o)
-            d = []
-            for j in range(dc):
-                dl, o = _rU32(mfv, o)
-                # print("memfree: "+str(gc.mem_free()))
-                # print(k+"["+str(j)+"] "+str(dl)+" bytes")
-                dba = bytearray(dl)
-                zds.readinto(dba)
-                d.append(dba)
+            if (wl and k not in include) or (bl and k in exclude):
+                d = None
+                for j in range(dc):
+                    dl, o = _rU32(mfv, o)
+                    for k in range(0, dl, 1024):
+                        if dl - k < 1024:
+                            zds.readinto(dmvz[:dl-k])
+                        else:
+                            zds.readinto(dbaz)
+            else:
+                d = []
+                for j in range(dc):
+                    dl, o = _rU32(mfv, o)
+                    # print("memfree: "+str(gc.mem_free()))
+                    # print(k+"["+str(j)+"] "+str(dl)+" bytes")
+                    dba = bytearray(dl)
+                    zds.readinto(dba)
+                    d.append(dba)
             e = ZPackEntry(id, d)
             if id == M_IMG:
                 flags, o = _rU8(mfv, o)
